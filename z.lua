@@ -1586,6 +1586,9 @@ function z_cd(patterns)
 		return nil
 	end
 	local last = patterns[#patterns]
+	-- ilyagr
+	-- io.stderr:write(last, " ", #patterns, "\n")
+	-- io.stderr:write(patterns[1]," ", patterns[2], " ", patterns[3],"\n")
 	if last == '~' or last == '~/' then
 		return os.path.expand('~')
 	elseif windows and last == '~\\' then
@@ -1719,6 +1722,7 @@ function cd_backward(args, options, pwd)
 	if nargs == 0 then
 		return find_vcs_root(pwd)
 	elseif nargs == 1 then
+		-- Annoying
 		if args[1]:sub(1, 2) == '..' then
 			local size = args[1]:len() - 1
 			if args[1]:match('^%.%.+$') then
@@ -1758,7 +1762,8 @@ function cd_backward(args, options, pwd)
 			end
 			return nil
 		end
-	else
+	elseif nargs == 2 then
+		-- TODO ilyagr: ZB here
 		local test = windows and pwd:gsub('\\', '/') or pwd
 		local src = args[1]
 		local dst = args[2]
@@ -1769,10 +1774,22 @@ function cd_backward(args, options, pwd)
 		if not start then
 			return pwd
 		end
+
 		local lhs = pwd:sub(1, start - 1)
 		local rhs = pwd:sub(ends + 1)
-		return lhs .. dst .. rhs
+		local newpath = lhs .. dst .. rhs
+		if os.path.isdir(newpath) then
+			return newpath
+		end
+
+		-- Get rid of the entire path component that matched `src`.
+		lhs = lhs:gsub("[^/]*$", "")
+		rhs = rhs:gsub("^[^/]*", "")
+		return z_cd({lhs, dst, rhs})
 	end
+
+	io.stderr:write("Error: " .. Z_CMD .. " -b takes at most 2 arguments.\n")
+	return nil
 end
 
 
