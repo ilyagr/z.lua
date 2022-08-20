@@ -176,15 +176,11 @@ To z.lua, a directory that has low ranking but has been accessed recently will q
 
 ## Default Matching
 
-By default, z.lua uses default matching algorithm similar to the original z.sh. Paths must be match all of the regexes in order.
+By default, `z.lua` uses default matching algorithm similar to the original `z.sh`. Paths must be match all of the regexes in order.
 
 - cd to a directory contains foo:
 
       z foo
-
-- cd to a directory ends with foo:
-
-      z foo$
 
 - use multiple arguments:
 
@@ -194,6 +190,15 @@ By default, z.lua uses default matching algorithm similar to the original z.sh. 
       30   /home/user/mail/inbox
 
   `"z in"` would cd into `/home/user/mail/inbox` as the higher weighted entry. However you can pass multiple arguments to z.lua to prefer a different entry. In the above example, `"z w in"` would then change directory to `/home/user/work/inbox`.
+
+- use regexes:
+
+  ```bash
+  z foo$   # cd to a directory ends with foo
+  z %d     # cd to a directory that contains a digit
+  ```
+
+  Unlike `z.sh`, `z.lua` uses the [Lua regular expression syntax](https://www.lua.org/pil/20.2.html).
 
 ## Enhanced Matching
 
