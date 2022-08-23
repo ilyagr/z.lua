@@ -1586,7 +1586,7 @@ end
 -----------------------------------------------------------------------
 -- calculate jump dir
 -----------------------------------------------------------------------
-function z_cd(patterns)
+function z_cd(patterns, subdir_only)
 	if patterns == nil then
 		return nil
 	end
@@ -1596,7 +1596,10 @@ function z_cd(patterns)
 	local last = patterns[#patterns]
 	-- ilyagr
 	-- io.stderr:write(last, " ", #patterns, "\n")
-	-- io.stderr:write(patterns[1]," ", patterns[2], " ", patterns[3],"\n")
+	-- for _, p in ipairs(patterns) do
+	--	io.stderr:write(" | ", p)
+	-- end
+	-- io.stderr:write("\n")
 	if last == '~' or last == '~/' then
 		return os.path.expand('~')
 	elseif windows and last == '~\\' then
@@ -1610,7 +1613,7 @@ function z_cd(patterns)
 			return os.path.norm(last)
 		end
 	end
-	local M = z_match(patterns, Z_METHOD, Z_SUBDIR)
+	local M = z_match(patterns, Z_METHOD, subdir_only)
 	if M == nil then
 		return nil
 	end
@@ -1767,11 +1770,9 @@ function cd_backward(args, options, pwd)
 			return os.path.normpath(pwd:sub(1, ends))
 		end
 		return nil
-	elseif nargs == 2 then
-		-- TODO ilyagr: ZB here
+	else
 		local test = windows and pwd:gsub('\\', '/') or pwd
 		local src = args[1]
-		local dst = args[2]
 		if not src:match('%u') then
 			test = test:lower()
 		end
@@ -1779,25 +1780,41 @@ function cd_backward(args, options, pwd)
 		if not start then
 			return pwd
 		end
-
 		local lhs = pwd:sub(1, start - 1)
 		local rhs = pwd:sub(ends + 1)
-		local newpath = lhs .. dst .. rhs
-		if os.path.isdir(newpath) then
-			return newpath
+
+		if not Z_SUBDIR then
+			if nargs ~= 2 then
+				io.stderr:write("Error: " .. Z_CMD .. " -b takes at most 2 arguments unless -c is also used.\n")
+				return nil
+			end
+			-- Check for an exact match in the filesystem. Doesn't make sense with -c.
+			local dst = args[2]
+			local newpath = lhs .. dst .. rhs
+			if os.path.isdir(newpath) then
+				return newpath
+			end
 		end
 
-		-- Get rid of the entire path component that matched `src`.
+		-- Move on to fuzzy matching. Get rid of the entire path component that matched `src`.
 		lhs = lhs:gsub("[^/]*$", "")
 		rhs = rhs:gsub("^[^/]*", "")
-		return z_cd({lhs, dst, rhs})
-		-- In the future, it would make sense to have `z -b -c from to to2`
-		-- to z_cd({lhs, dst[1], dst[2]}). Without `-c`, we probably still
-		-- want to support only 2 argumets.
-	end
+		newargs = {}
+		-- ilyagr
+		-- io.stderr:write("test:" .. lhs .. " __ " .. rhs .. "\n")
+		table.insert(newargs, lhs)
+		for i, arg in ipairs(args) do
+			if i > 1 then
+				--io.stderr:write("test:"..arg.."\n")
+				table.insert(newargs, arg)
+			end
+		end
+		if not Z_SUBDIR and rhs ~= "" then
+			table.insert(newargs, rhs)
+		end
 
-	io.stderr:write("Error: " .. Z_CMD .. " -b takes at most 2 arguments.\n")
-	return nil
+		return z_cd(newargs, false)
+	end
 end
 
 
@@ -1957,7 +1974,7 @@ function main(argv)
 		elseif #args == 0 then
 			path = nil
 		else
-			path = z_cd(args)
+			path = z_cd(args, Z_SUBDIR)
 			if path == nil and Z_MATCHMODE ~= 0 then
 				local last = args[#args]
 				if os.path.isdir(last) then
