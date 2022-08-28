@@ -1594,6 +1594,9 @@ function z_cd(patterns)
 		return nil
 	end
 	local last = patterns[#patterns]
+	-- ilyagr
+	-- io.stderr:write(last, " ", #patterns, "\n")
+	-- io.stderr:write(patterns[1]," ", patterns[2], " ", patterns[3],"\n")
 	if last == '~' or last == '~/' then
 		return os.path.expand('~')
 	elseif windows and last == '~\\' then
@@ -1765,6 +1768,7 @@ function cd_backward(args, options, pwd)
 		end
 		return nil
 	elseif nargs == 2 then
+		-- TODO ilyagr: ZB here
 		local test = windows and pwd:gsub('\\', '/') or pwd
 		local src = args[1]
 		local dst = args[2]
@@ -1922,6 +1926,7 @@ function main(argv)
 		print('Try \'' .. help .. '\' for more information')
 		return false
 	end
+	-- ilyagr: Option parsing
 	if true then
 		os.log("options: " .. dump(options))
 		os.log("args: " .. dump(args))
