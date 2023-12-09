@@ -1457,9 +1457,12 @@ function z_match(patterns, method, subdir)
 	patterns = patterns ~= nil and patterns or {}
 	method = method ~= nil and method or 'frecent'
 	subdir = subdir ~= nil and subdir or false
+	os.log("z_match(" .. dump(patterns) .. "," .. dump(method) .. "," .. dump(subdir) .. ")")
 	local M = data_load(DATA_FILE)
 	M = data_select(M, patterns, false)
+	os.log("M = " .. dump(M))
 	M = data_filter(M)
+	os.log("M = " .. dump(M))
 	if Z_MATCHNAME then
 		local N = data_select(M, patterns, true)
 		N = data_filter(N)
@@ -1576,11 +1579,12 @@ function z_print(M, weight, number)
 	end
 end
 
-
 -----------------------------------------------------------------------
 -- calculate jump dir
 -----------------------------------------------------------------------
 function z_cd(patterns)
+	os.log("z_cd" .. dump(patterns))
+	io.stderr.write(patterns)
 	if patterns == nil then
 		return nil
 	end
@@ -2812,7 +2816,6 @@ if os.lfs.enable ~= nil then
 		end
 	end
 end
-
 
 -----------------------------------------------------------------------
 -- program entry
